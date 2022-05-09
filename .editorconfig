@@ -1,0 +1,14 @@
+root = true
+
+[*.{js, ts, mjs, es6, cjs, json, js.map, yml, yaml, pug}]
+trim_trailing_whitespace = true
+insert_final_newline = true
+max_line_length = 80
+indent_style = space
+end_of_line = lf
+indent_size = 2
+charset = utf-8
+
+[*.md]
+max_line_length = off
+indent_size = 4
