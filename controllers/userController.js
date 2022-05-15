@@ -12,4 +12,6 @@ const logout = async (freshToken) => UsersService.logout(freshToken);
 
 const refresh = async (freshToken) => UsersService.refresh(freshToken);
 
-module.exports = { registration, authorization, logout, refresh };
+const whoami = async (useId) => UsersService.whoami(useId);
+
+module.exports = { registration, authorization, logout, refresh, whoami };

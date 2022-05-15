@@ -34,20 +34,8 @@ class UsersService {
     const { email, password } = credentials;
     const user = await UserModel.findOne({ where: { email } });
 
-    if (!user) {
-      throw ApiError.BadRequest(
-        `Пользователь с почтовым адресом ${email} не найден`
-      );
-    }
-
-    const isPasswordsEqual = comparePasswords(
-      password,
-      user.passwordHash,
-      user.salt
-    );
-
-    if (!isPasswordsEqual) {
-      throw ApiError.BadRequest('Неверно введен пароль');
+    if (!user || !comparePasswords(password, user.passwordHash, user.salt)) {
+      throw ApiError.BadRequest('Неверно введен email или пароль');
     }
 
     const userDTO = new UserDTO(user);
@@ -67,7 +55,7 @@ class UsersService {
 
   static async refresh(refreshToken) {
     if (!refreshToken) {
-      throw ApiError.Unauthorized();
+      throw ApiError.BadRequest('Отстутсвует refresh token');
     }
 
     const userDataFromToken = TokensService.validateRefreshToken(refreshToken);
@@ -92,6 +80,16 @@ class UsersService {
       tokens,
       user: userDTO,
     };
+  }
+
+  static async whoami(userId) {
+    const user = await UserModel.findByPk(userId);
+
+    if (!user) {
+      throw ApiError.BadRequest('Пользователь не найден');
+    }
+
+    return new UserDTO(user);
   }
 }
 
