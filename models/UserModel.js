@@ -8,6 +8,12 @@ module.exports = (sequelize, DataTypes) => {
       UserModel.hasMany(models.RefreshTokenModel, {
         foreignKey: 'userId',
       });
+      UserModel.hasMany(models.BotModel, {
+        foreignKey: 'userId',
+      });
+      UserModel.hasMany(models.FlowModel, {
+        foreignKey: 'userId',
+      });
     }
   }
 
