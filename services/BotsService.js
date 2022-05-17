@@ -18,11 +18,22 @@ class BotsService {
     return bot ? new BotDTO(bot) : null;
   }
 
+  static async getUserBotsForAttachment(userId) {
+    return BotModel.findAll({
+      attributes: [
+        ['botId', 'key'],
+        ['name', 'text'],
+        ['botId', 'value'],
+      ],
+      where: { userId },
+    });
+  }
+
   static async createBot(userId, botData) {
     const bot = await BotModel.create({
+      ...botData,
       userId,
       botId: randomUUID(),
-      ...botData,
     });
 
     return new BotDTO(bot);

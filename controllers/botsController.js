@@ -7,6 +7,9 @@ const getUserBots = async (userId) => BotsService.getUserBots(userId);
 const getUserBot = async (userId, botId) =>
   BotsService.getUserBot(userId, botId);
 
+const getUserBotsForAttachment = async (userId) =>
+  BotsService.getUserBotsForAttachment(userId);
+
 const createBot = async (userId, botData) =>
   BotsService.createBot(userId, botData);
 
@@ -15,4 +18,11 @@ const updateBot = async (userId, botId, botData) =>
 
 const deleteBot = async (userId, botId) => BotsService.deleteBot(userId, botId);
 
-module.exports = { getUserBots, getUserBot, createBot, updateBot, deleteBot };
+module.exports = {
+  getUserBots,
+  getUserBot,
+  getUserBotsForAttachment,
+  createBot,
+  updateBot,
+  deleteBot,
+};

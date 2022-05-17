@@ -1,5 +1,7 @@
 'use strict';
 
+const sequelize = require('sequelize');
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('flowsAttachment', {
@@ -29,10 +31,12 @@ module.exports = {
       },
       createdAt: {
         allowNull: false,
+        defaultValue: sequelize.literal('NOW()'),
         type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
+        defaultValue: sequelize.literal('NOW()'),
         type: Sequelize.DATE,
       },
     });

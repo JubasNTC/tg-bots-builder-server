@@ -7,11 +7,12 @@ const asyncHandler = require('utils/asyncHandler');
 const {
   getUserBots,
   getUserBot,
+  getUserBotsForAttachment,
   createBot,
   updateBot,
   deleteBot,
 } = require('controllers/botsController');
-const { botCreationSchema } = require('utils/validators/botValidator');
+const { botSchema } = require('utils/validators/botValidator');
 const { isUUIDv4 } = require('utils/validators/commonValidator');
 
 const router = express.Router();
@@ -47,6 +48,20 @@ router.get(
   })
 );
 
+router.get(
+  '/attachment/list',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+    } = req;
+
+    const bots = await getUserBotsForAttachment(id);
+
+    res.json({ bots });
+  })
+);
+
 router.post(
   '/',
   authMiddleware,
@@ -56,7 +71,7 @@ router.post(
       body,
     } = req;
 
-    const botData = botCreationSchema.validateSync(body);
+    const botData = botSchema.validateSync(body);
     const bot = await createBot(id, botData);
 
     res.json({ bot });
@@ -74,7 +89,7 @@ router.put(
     } = req;
 
     isUUIDv4.validateSync(botId);
-    const botData = botCreationSchema.validateSync(body);
+    const botData = botSchema.validateSync(body);
     await updateBot(id, botId, botData);
 
     res.status(200).end();
@@ -91,7 +106,6 @@ router.delete(
     } = req;
 
     isUUIDv4.validateSync(botId);
-
     await deleteBot(id, botId);
 
     res.status(200).end();

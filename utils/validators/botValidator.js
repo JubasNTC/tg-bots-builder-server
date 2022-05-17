@@ -2,7 +2,7 @@
 
 const yup = require('yup');
 
-const botCreationSchema = yup
+const botSchema = yup
   .object({
     name: yup
       .string()
@@ -36,4 +36,4 @@ const botCreationSchema = yup
   })
   .noUnknown(true);
 
-module.exports = { botCreationSchema };
+module.exports = { botSchema };
