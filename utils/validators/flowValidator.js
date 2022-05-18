@@ -1,6 +1,7 @@
 'use strict';
 
 const yup = require('yup');
+const { isUUIDv4 } = require('./commonValidator');
 
 const initialFlowCreationSchema = yup
   .object({
@@ -27,4 +28,23 @@ const flowSettingEnableSchema = yup
   })
   .noUnknown(true);
 
-module.exports = { initialFlowCreationSchema, flowSettingEnableSchema };
+const taskFlowCreationSchema = yup
+  .object({
+    prevTaskId: yup.string().defined().default(''),
+    taskType: yup.string().required('Обязательное поле'),
+    taskData: yup.object().required('Обязательное поле'),
+  })
+  .noUnknown(true);
+
+const taskFlowEditSchema = yup
+  .object({
+    taskData: yup.object().required('Обязательное поле'),
+  })
+  .noUnknown(true);
+
+module.exports = {
+  initialFlowCreationSchema,
+  flowSettingEnableSchema,
+  taskFlowCreationSchema,
+  taskFlowEditSchema,
+};

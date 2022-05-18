@@ -7,14 +7,21 @@ const asyncHandler = require('utils/asyncHandler');
 const {
   getUserFlows,
   getUserFlowForForm,
+  getUserFlowTasks,
   createFlow,
+  createUserFlowTask,
+  getUserFlowTask,
+  updateUserFlowTask,
   updateFlow,
   setFlowEnabled,
   deleteFlow,
+  deleteUserFlowTask,
 } = require('controllers/flowController');
 const {
   initialFlowCreationSchema,
   flowSettingEnableSchema,
+  taskFlowCreationSchema,
+  taskFlowEditSchema,
 } = require('utils/validators/flowValidator');
 const { isUUIDv4 } = require('utils/validators/commonValidator');
 
@@ -50,6 +57,39 @@ router.get(
   })
 );
 
+router.get(
+  '/:flowId/tasks',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+      params: { flowId },
+    } = req;
+
+    isUUIDv4.validateSync(flowId);
+    const tasks = await getUserFlowTasks(id, flowId);
+
+    res.json({ tasks });
+  })
+);
+
+router.get(
+  '/:flowId/tasks/:taskId',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+      params: { flowId, taskId },
+    } = req;
+
+    isUUIDv4.validateSync(flowId);
+    isUUIDv4.validateSync(taskId);
+    const task = await getUserFlowTask(id, flowId, taskId);
+
+    res.json({ task });
+  })
+);
+
 router.post(
   '/',
   authMiddleware,
@@ -63,6 +103,30 @@ router.post(
     const flow = await createFlow(id, flowData);
 
     res.json({ flow });
+  })
+);
+
+router.post(
+  '/:flowId/tasks',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+      params: { flowId },
+      body,
+    } = req;
+
+    const { prevTaskId, taskType, taskData } =
+      taskFlowCreationSchema.validateSync(body);
+    const taskId = await createUserFlowTask(
+      id,
+      flowId,
+      prevTaskId,
+      taskType,
+      taskData
+    );
+
+    res.json({ taskId });
   })
 );
 
@@ -102,6 +166,25 @@ router.put(
   })
 );
 
+router.put(
+  '/:flowId/tasks/:taskId',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+      params: { flowId, taskId },
+      body,
+    } = req;
+
+    isUUIDv4.validateSync(flowId);
+    isUUIDv4.validateSync(taskId);
+    const { taskData } = taskFlowEditSchema.validateSync(body);
+    await updateUserFlowTask(id, flowId, taskId, taskData);
+
+    res.status(200).end();
+  })
+);
+
 router.delete(
   '/:flowId',
   authMiddleware,
@@ -113,6 +196,24 @@ router.delete(
 
     isUUIDv4.validateSync(flowId);
     await deleteFlow(id, flowId);
+
+    res.status(200).end();
+  })
+);
+
+router.delete(
+  '/:flowId/tasks/:taskId',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+      params: { flowId, taskId },
+    } = req;
+
+    isUUIDv4.validateSync(flowId);
+    isUUIDv4.validateSync(taskId);
+
+    await deleteUserFlowTask(id, flowId, taskId);
 
     res.status(200).end();
   })

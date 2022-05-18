@@ -49,6 +49,27 @@ class FlowsService {
     };
   }
 
+  static async getUserFlowTasks(userId, flowId) {
+    const flow = await FlowModel.findOne({ where: { userId, flowId } });
+
+    if (!flow) {
+      return null;
+    }
+
+    const {
+      flowData: { triggers, tasks },
+    } = flow;
+
+    return [
+      {
+        name: 'Триггеры',
+        taskType: 'triggers',
+        taskId: 'ttt',
+        triggers,
+      },
+    ].concat(tasks);
+  }
+
   static async createFlow(userId, initialFlowData) {
     const { name, description, triggers, botsAttachment } = initialFlowData;
     const flowId = randomUUID();
@@ -66,6 +87,7 @@ class FlowsService {
             triggers: triggers.split('\n'),
             initialSession: {},
             tasks: [],
+            toFront: {},
           },
         },
         { transaction }
@@ -93,12 +115,17 @@ class FlowsService {
     const { name, description, triggers, botsAttachment } = flowData;
     const transaction = await sequelize.transaction();
 
+    const { flowData: oldFlowData } = await FlowModel.findOne({
+      where: { userId, flowId },
+    });
+
     try {
       await FlowModel.update(
         {
           name,
           description,
           flowData: {
+            ...oldFlowData,
             triggers: triggers.split('\n'),
           },
         },
@@ -170,6 +197,234 @@ class FlowsService {
          FROM "bots"
          WHERE "botId" IN(:botAttachmentIds);`,
       queryOptions
+    );
+  }
+
+  static buildTaskData(taskId, taskType, _taskData) {
+    const result = {
+      taskId,
+      taskType,
+      name: _taskData.name,
+      taskData: {},
+    };
+
+    if (taskType === 'message') {
+      result.taskData.text = _taskData.text;
+    }
+
+    if (taskType === 'question') {
+      result.taskData.type = _taskData.type;
+      result.taskData.question = _taskData.question;
+
+      if (_taskData.type === 'text') {
+        result.taskData.validation = _taskData.validation;
+        result.taskData.customValidationMessage =
+          _taskData.customValidationMessage;
+        result.taskData.numberOfInvalidAnswers =
+          _taskData.numberOfInvalidAnswers;
+      }
+
+      if (_taskData.type === 'choice') {
+        const choices = [];
+
+        if (_taskData.choiceAnswerValue1) {
+          choices.push({
+            text: _taskData.choiceAnswerText1,
+            value: _taskData.choiceAnswerValue1,
+          });
+        }
+
+        if (_taskData.choiceAnswerValue2) {
+          choices.push({
+            text: _taskData.choiceAnswerText2,
+            value: _taskData.choiceAnswerValue2,
+          });
+        }
+
+        if (_taskData.choiceAnswerValue3) {
+          choices.push({
+            text: _taskData.choiceAnswerText3,
+            value: _taskData.choiceAnswerValue3,
+          });
+        }
+
+        if (_taskData.choiceAnswerValue4) {
+          choices.push({
+            text: _taskData.choiceAnswerText4,
+            value: _taskData.choiceAnswerValue4,
+          });
+        }
+
+        if (_taskData.choiceAnswerValue5) {
+          choices.push({
+            text: _taskData.choiceAnswerText5,
+            value: _taskData.choiceAnswerValue5,
+          });
+        }
+
+        if (_taskData.choiceAnswerValue6) {
+          choices.push({
+            text: _taskData.choiceAnswerText6,
+            value: _taskData.choiceAnswerValue6,
+          });
+        }
+
+        result.taskData.choices = choices;
+      }
+    }
+
+    if (_taskData.type === 'image') {
+      result.taskData.url = _taskData.url;
+    }
+
+    if (_taskData.type === 'video') {
+      result.taskData.url = _taskData.url;
+    }
+
+    return result;
+  }
+
+  static buildTaskInitialSession(taskType, _taskData) {
+    const result = {
+      filters: null,
+    };
+
+    if (
+      taskType === 'question' &&
+      _taskData.type === 'text' &&
+      !!_taskData.validation
+    ) {
+      result.numberOfInvalidAnswers = _taskData.numberOfInvalidAnswers;
+    }
+
+    return result;
+  }
+
+  static async createUserFlowTask(
+    userId,
+    flowId,
+    prevTaskId,
+    taskType,
+    taskData
+  ) {
+    const { flowData } = await FlowModel.findOne({
+      where: { userId, flowId },
+    });
+
+    const { initialSession, tasks, toFront } = flowData;
+
+    const taskId = randomUUID();
+    const builtTaskData = FlowsService.buildTaskData(
+      taskId,
+      taskType,
+      taskData
+    );
+
+    if (tasks.length > 0) {
+      const prevTaskIndex = tasks.findIndex(
+        ({ taskId }) => taskId === prevTaskId
+      );
+      tasks.splice(prevTaskIndex + 1, 0, builtTaskData);
+    } else {
+      tasks.push(builtTaskData);
+    }
+
+    initialSession[taskId] = FlowsService.buildTaskInitialSession(
+      taskType,
+      taskData
+    );
+
+    toFront[taskId] = taskData;
+
+    await FlowModel.update(
+      {
+        flowData: {
+          ...flowData,
+          initialSession,
+          tasks,
+          toFront,
+        },
+      },
+      {
+        where: { userId, flowId },
+      }
+    );
+
+    return taskId;
+  }
+
+  static async getUserFlowTask(userId, flowId, taskId) {
+    const {
+      flowData: { toFront },
+    } = await FlowModel.findOne({
+      where: { userId, flowId },
+    });
+
+    return toFront[taskId];
+  }
+
+  static async updateUserFlowTask(userId, flowId, taskId, taskData) {
+    const { flowData } = await FlowModel.findOne({
+      where: { userId, flowId },
+    });
+
+    const { initialSession, tasks, toFront } = flowData;
+    const taskIndex = tasks.findIndex(
+      ({ taskId: _taskId }) => _taskId === taskId
+    );
+    initialSession[taskId] = FlowsService.buildTaskInitialSession(
+      tasks[taskIndex].taskType,
+      taskData
+    );
+    toFront[taskId] = taskData;
+    const builtTaskData = FlowsService.buildTaskData(
+      taskId,
+      tasks[taskIndex].taskType,
+      taskData
+    );
+    tasks[taskIndex] = builtTaskData;
+
+    await FlowModel.update(
+      {
+        flowData: {
+          ...flowData,
+          initialSession,
+          tasks,
+          toFront,
+        },
+      },
+      {
+        where: { userId, flowId },
+      }
+    );
+  }
+
+  static async deleteUserFlowTask(userId, flowId, taskId) {
+    const { flowData } = await FlowModel.findOne({
+      where: { userId, flowId },
+    });
+
+    const { initialSession, tasks, toFront } = flowData;
+
+    const taskIndex = tasks.findIndex(
+      ({ taskId: _taskId }) => _taskId === taskId
+    );
+    delete initialSession[taskId];
+    delete toFront[taskId];
+    tasks.splice(taskIndex, 1);
+
+    await FlowModel.update(
+      {
+        flowData: {
+          ...flowData,
+          initialSession,
+          tasks,
+          toFront,
+        },
+      },
+      {
+        where: { userId, flowId },
+      }
     );
   }
 }
