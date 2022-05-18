@@ -4,25 +4,30 @@ const sequelize = require('sequelize');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('refreshTokens', {
+    await queryInterface.createTable('flowsAttachment', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      userId: {
+      botId: {
         allowNull: false,
         type: Sequelize.INTEGER,
         onDelete: 'CASCADE',
         references: {
-          model: 'users',
+          model: 'bots',
           key: 'id',
         },
       },
-      refreshToken: {
+      flowId: {
         allowNull: false,
-        type: Sequelize.STRING(512),
+        type: Sequelize.INTEGER,
+        onDelete: 'CASCADE',
+        references: {
+          model: 'flows',
+          key: 'id',
+        },
       },
       createdAt: {
         allowNull: false,
@@ -37,6 +42,6 @@ module.exports = {
     });
   },
   async down(queryInterface) {
-    await queryInterface.dropTable('refreshTokens');
+    await queryInterface.dropTable('flowsAttachment');
   },
 };

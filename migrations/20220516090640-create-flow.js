@@ -4,7 +4,7 @@ const sequelize = require('sequelize');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('refreshTokens', {
+    await queryInterface.createTable('flows', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -20,9 +20,28 @@ module.exports = {
           key: 'id',
         },
       },
-      refreshToken: {
+      flowId: {
         allowNull: false,
-        type: Sequelize.STRING(512),
+        unique: true,
+        type: Sequelize.STRING(36),
+      },
+      name: {
+        allowNull: false,
+        unique: true,
+        type: Sequelize.STRING(30),
+      },
+      description: {
+        allowNull: false,
+        type: Sequelize.STRING(50),
+      },
+      flowData: {
+        allowNull: false,
+        type: Sequelize.JSONB,
+      },
+      enabled: {
+        allowNull: false,
+        defaultValue: false,
+        type: Sequelize.BOOLEAN,
       },
       createdAt: {
         allowNull: false,
@@ -37,6 +56,6 @@ module.exports = {
     });
   },
   async down(queryInterface) {
-    await queryInterface.dropTable('refreshTokens');
+    await queryInterface.dropTable('flows');
   },
 };

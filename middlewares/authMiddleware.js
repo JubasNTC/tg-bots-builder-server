@@ -3,7 +3,7 @@
 const TokensService = require('services/TokensService');
 const ApiError = require('utils/errors/ApiError');
 
-module.exports = (res, req, next) => {
+module.exports = function authMiddleware(req, res, next) {
   try {
     const authorizationHeader = req.headers.authorization;
 
@@ -11,7 +11,7 @@ module.exports = (res, req, next) => {
       return next(ApiError.Unauthorized());
     }
 
-    const [accessToken] = authorizationHeader.split(' ');
+    const accessToken = authorizationHeader.split(' ')[1];
 
     if (!accessToken) {
       return next(ApiError.Unauthorized());

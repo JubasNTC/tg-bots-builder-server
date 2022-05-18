@@ -2,8 +2,9 @@
 
 const express = require('express');
 
-const asyncHandler = require('utils/asyncHandler');
 const userController = require('controllers/userController');
+const authMiddleware = require('middlewares/authMiddleware');
+const asyncHandler = require('utils/asyncHandler');
 const { registrationSchema } = require('utils/validators/userValidator');
 
 const router = express.Router();
@@ -58,7 +59,7 @@ router.post(
   })
 );
 
-router.post(
+router.get(
   '/refresh',
   asyncHandler(async (req, res) => {
     const { refreshToken: oldRefreshToken } = req.cookies;
@@ -73,6 +74,20 @@ router.post(
       httpOnly: true,
     });
     res.json({ accessToken, user });
+  })
+);
+
+router.get(
+  '/whoami',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+    } = req;
+
+    const user = await userController.whoami(id);
+
+    res.json({ user });
   })
 );
 
