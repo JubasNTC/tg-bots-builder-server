@@ -281,6 +281,30 @@ class FlowsService {
       result.taskData.url = _taskData.url;
     }
 
+    if (_taskData.type === 'card') {
+      result.taskData.title = _taskData.title;
+      result.taskData.text = _taskData.text;
+      result.taskData.imageUrl = _taskData.imageUrl;
+      result.taskData.linkText = _taskData.linkText;
+      result.taskData.linkUrl = _taskData.linkUrl;
+    }
+
+    if (_taskData.type === 'notifyTelegram') {
+      result.taskData.title = _taskData.title;
+      result.taskData.chatIds = _taskData.chatIds;
+    }
+
+    if (_taskData.type === 'http') {
+      result.taskData.method = _taskData.method;
+      result.taskData.httpHeaders = _taskData.httpHeaders;
+      result.taskData.httpBody = _taskData.httpBody;
+      result.taskData.timeout = _taskData.timeout;
+      result.taskData.basicUsername = _taskData.basicUsername;
+      result.taskData.basicPassword = _taskData.basicPassword;
+      result.taskData.isUseProxy = _taskData.isUseProxy;
+      result.taskData.proxyUrl = _taskData.proxyUrl;
+    }
+
     return result;
   }
 
@@ -289,12 +313,21 @@ class FlowsService {
       filters: null,
     };
 
-    if (
-      taskType === 'question' &&
-      _taskData.type === 'text' &&
-      !!_taskData.validation
-    ) {
-      result.numberOfInvalidAnswers = _taskData.numberOfInvalidAnswers;
+    if (taskType === 'question') {
+      result.answer = '';
+
+      if (_taskData.type === 'text' && !!_taskData.validation) {
+        result.numberOfInvalidAnswers = _taskData.numberOfInvalidAnswers;
+      }
+    }
+
+    if (_taskData.type === 'notifyTelegram') {
+      result.resolved = false;
+    }
+
+    if (_taskData.type === 'http') {
+      result.response = false;
+      result.status = '';
     }
 
     return result;
