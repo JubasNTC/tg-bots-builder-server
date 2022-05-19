@@ -46,6 +46,12 @@ const deleteFlow = async (userId, flowId) =>
 const deleteUserFlowTask = async (userId, flowId, taskId) =>
   FlowsService.deleteUserFlowTask(userId, flowId, taskId);
 
+const changeUserFlowTaskFilters = async (userId, flowId, taskId, filters) =>
+  FlowsService.changeUserFlowTaskFilters(userId, flowId, taskId, filters);
+
+const getUserFlowTaskFilters = async (userId, flowId, taskId) =>
+  FlowsService.getUserFlowTaskFilters(userId, flowId, taskId);
+
 module.exports = {
   getUserFlows,
   getUserFlowForForm,
@@ -58,4 +64,6 @@ module.exports = {
   setFlowEnabled,
   deleteFlow,
   deleteUserFlowTask,
+  changeUserFlowTaskFilters,
+  getUserFlowTaskFilters,
 };

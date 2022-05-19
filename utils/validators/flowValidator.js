@@ -42,9 +42,16 @@ const taskFlowEditSchema = yup
   })
   .noUnknown(true);
 
+const taskFlowFiltersSchema = yup
+  .object({
+    filters: yup.object().nullable(true),
+  })
+  .noUnknown(true);
+
 module.exports = {
   initialFlowCreationSchema,
   flowSettingEnableSchema,
   taskFlowCreationSchema,
   taskFlowEditSchema,
+  taskFlowFiltersSchema,
 };

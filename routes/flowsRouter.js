@@ -16,12 +16,15 @@ const {
   setFlowEnabled,
   deleteFlow,
   deleteUserFlowTask,
+  changeUserFlowTaskFilters,
+  getUserFlowTaskFilters,
 } = require('controllers/flowController');
 const {
   initialFlowCreationSchema,
   flowSettingEnableSchema,
   taskFlowCreationSchema,
   taskFlowEditSchema,
+  taskFlowFiltersSchema,
 } = require('utils/validators/flowValidator');
 const { isUUIDv4 } = require('utils/validators/commonValidator');
 
@@ -127,6 +130,43 @@ router.post(
     );
 
     res.json({ taskId });
+  })
+);
+
+router.get(
+  '/:flowId/tasks/:taskId/filters',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+      params: { flowId, taskId },
+    } = req;
+
+    isUUIDv4.validateSync(flowId);
+    isUUIDv4.validateSync(taskId);
+    const filters = await getUserFlowTaskFilters(id, flowId, taskId);
+
+    res.json({ filters });
+  })
+);
+
+router.post(
+  '/:flowId/tasks/:taskId/filters',
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      user: { id },
+      params: { flowId, taskId },
+      body,
+    } = req;
+
+    isUUIDv4.validateSync(flowId);
+    isUUIDv4.validateSync(taskId);
+    const { filters } = taskFlowFiltersSchema.validateSync(body);
+
+    await changeUserFlowTaskFilters(id, flowId, taskId, filters);
+
+    res.status(200).end();
   })
 );
 

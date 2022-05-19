@@ -88,6 +88,7 @@ class FlowsService {
             initialSession: {},
             tasks: [],
             toFront: {},
+            toFrontFilters: {},
           },
         },
         { transaction }
@@ -457,6 +458,52 @@ class FlowsService {
       },
       {
         where: { userId, flowId },
+      }
+    );
+  }
+
+  static buildFilters(obj) {
+    return obj ? Object.values(obj.ors).map(({ ands }) => ands) : null;
+  }
+
+  static async changeUserFlowTaskFilters(userId, flowId, taskId, filters) {
+    const { flowData } = await FlowModel.findOne({
+      where: { userId, flowId },
+    });
+
+    const { initialSession, toFrontFilters } = flowData;
+
+    initialSession[taskId].filters = FlowsService.buildFilters(filters);
+    toFrontFilters[taskId] = filters;
+
+    await FlowModel.update(
+      {
+        flowData: {
+          ...flowData,
+          initialSession,
+          toFrontFilters,
+        },
+      },
+      {
+        where: { userId, flowId },
+      }
+    );
+  }
+
+  static async getUserFlowTaskFilters(userId, flowId, taskId) {
+    const {
+      flowData: { toFrontFilters },
+    } = await FlowModel.findOne({
+      where: { userId, flowId },
+    });
+
+    return (
+      toFrontFilters[taskId] ?? {
+        ors: [
+          {
+            ands: [],
+          },
+        ],
       }
     );
   }
