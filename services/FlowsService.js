@@ -274,15 +274,16 @@ class FlowsService {
       }
     }
 
-    if (_taskData.type === 'image') {
+    if (taskType === 'image') {
+      console.dir({ _taskData }, { depth: 10 });
       result.taskData.url = _taskData.url;
     }
 
-    if (_taskData.type === 'video') {
+    if (taskType === 'video') {
       result.taskData.url = _taskData.url;
     }
 
-    if (_taskData.type === 'card') {
+    if (taskType === 'card') {
       result.taskData.title = _taskData.title;
       result.taskData.text = _taskData.text;
       result.taskData.imageUrl = _taskData.imageUrl;
@@ -290,12 +291,13 @@ class FlowsService {
       result.taskData.linkUrl = _taskData.linkUrl;
     }
 
-    if (_taskData.type === 'notifyTelegram') {
-      result.taskData.title = _taskData.title;
+    if (taskType === 'notifyTelegram') {
+      result.taskData.text = _taskData.text;
       result.taskData.chatIds = _taskData.chatIds;
     }
 
-    if (_taskData.type === 'http') {
+    if (taskType === 'http') {
+      result.taskData.url = _taskData.url;
       result.taskData.method = _taskData.method;
       result.taskData.httpHeaders = _taskData.httpHeaders;
       result.taskData.httpBody = _taskData.httpBody;
@@ -327,7 +329,7 @@ class FlowsService {
     }
 
     if (_taskData.type === 'http') {
-      result.response = false;
+      result.response = {};
       result.status = '';
     }
 
@@ -463,7 +465,11 @@ class FlowsService {
   }
 
   static buildFilters(obj) {
-    return obj ? Object.values(obj.ors).map(({ ands }) => ands) : null;
+    if (obj.ors.length > 0) {
+      return Object.values(obj.ors).map(({ ands }) => ands);
+    }
+
+    return null;
   }
 
   static async changeUserFlowTaskFilters(userId, flowId, taskId, filters) {
@@ -497,15 +503,7 @@ class FlowsService {
       where: { userId, flowId },
     });
 
-    return (
-      toFrontFilters[taskId] ?? {
-        ors: [
-          {
-            ands: [],
-          },
-        ],
-      }
-    );
+    return toFrontFilters[taskId] ?? { ors: [{ ands: [] }] };
   }
 }
 
